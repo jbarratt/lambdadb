@@ -78,9 +78,8 @@ func findPath(start string, end string) {
 	fmt.Printf("Start Node: %v\n", bacon.NodeInfo[startNode])
 	fmt.Printf("End Node: %v\n", bacon.NodeInfo[endNode])
 
-	levels := make([]int, bacon.Graph.Order())
 	searchStart := time.Now()
-	path, err := bacon.BreadthFirstSearch(startNode, endNode, levels)
+	path, err := bacon.BreadthFirstSearch(startNode, endNode)
 	log.Printf("Search took %s", time.Since(searchStart))
 	if err != nil {
 		fmt.Printf("No path found\n")
@@ -217,17 +216,9 @@ func (set NodeSet) Contains(node Node) bool {
 
 // BreadthFirstSearch returns bacon number of source to dest
 // Returns a slice of nodes representing the path from source to dest
-func (b *Bacon) BreadthFirstSearch(source Node, dest Node, level []int) ([]Node, error) {
-
-
-	// Should be able to add a 'parent node' array
-	// Populate it when adding a neighbor to the next node
-	// Then it can be 'unwound', node -> parent -> parent -> parent
+func (b *Bacon) BreadthFirstSearch(source Node, dest Node) ([]Node, error) {
 
 	g := b.Graph
-	if len(level) != g.Order() {
-		panic("invalid level length")
-	}
 
 	visited := NewNodeSet(g.Order())
 
@@ -235,18 +226,14 @@ func (b *Bacon) BreadthFirstSearch(source Node, dest Node, level []int) ([]Node,
 	nextLevel := make([]Node, 0, g.Order())
 	parentNode := make([]Node, g.Order(), g.Order())
 
-	level[source] = 1
 	visited.Add(source)
 	currentLevel = append(currentLevel, source)
-
-	levelNumber := 2
 
 	for len(currentLevel) > 0 {
 		for _, node := range currentLevel {
 			for _, neighbor := range g.Neighbors(node) {
 				if !visited.Contains(neighbor) {
 					nextLevel = append(nextLevel, neighbor)
-					level[neighbor] = levelNumber
 					visited.Add(neighbor)
 					parentNode[neighbor] = node
 				}
@@ -260,7 +247,6 @@ func (b *Bacon) BreadthFirstSearch(source Node, dest Node, level []int) ([]Node,
 		// loaded into cache only once
 		zuint32.SortBYOB(nextLevel, currentLevel[:cap(currentLevel)])
 
-		levelNumber++
 		currentLevel = currentLevel[:0:cap(currentLevel)]
 		currentLevel, nextLevel = nextLevel, currentLevel
 	}
