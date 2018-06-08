@@ -1,0 +1,6 @@
+data/__pycache__
+data/movie_json
+data/*.json
+data/*.gob
+graphtoy
+main
