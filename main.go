@@ -85,7 +85,13 @@ func findPath(start string, end string) {
 		fmt.Printf("No path found\n")
 	} else {
 		for _, node := range path {
-			fmt.Printf("%s\n", bacon.NodeInfo[node].Name)
+			ni := bacon.NodeInfo[node]
+			if ni.Kind == "movie" {
+				fmt.Printf("🎥 %s\n", ni.Name)
+			} else {
+				fmt.Printf("👤 %s\n", ni.Name)
+			}
+
 		}
 	}
 }
