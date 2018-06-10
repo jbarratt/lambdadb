@@ -1,15 +1,17 @@
 package main
 
 import (
-	"encoding/json"
 	"encoding/gob"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"io/ioutil"
-	"time"
 	"log"
 	"math"
+	"math/rand"
 	"os"
+	"strings"
+	"time"
 
 	"github.com/arbovm/levenshtein"
 	"github.com/shawnsmithdev/zermelo/zuint32"
@@ -18,10 +20,11 @@ import (
 
 func main() {
 
+	rand.Seed(time.Now().UnixNano())
 	app := cli.NewApp()
 	app.Commands = []cli.Command{
 		{
-			Name: "path",
+			Name:  "path",
 			Usage: "Find a path between 2 people",
 			Action: func(c *cli.Context) error {
 				findPath(c.Args().Get(0), c.Args().Get(1))
@@ -29,10 +32,18 @@ func main() {
 			},
 		},
 		{
-			Name: "serialize",
+			Name:  "serialize",
 			Usage: "convert the json db to higher perf",
 			Action: func(c *cli.Context) error {
 				reSerialize()
+				return nil
+			},
+		},
+		{
+			Name:  "random",
+			Usage: "Find a random path",
+			Action: func(c *cli.Context) error {
+				randomPath()
 				return nil
 			},
 		},
@@ -64,6 +75,24 @@ func reSerialize() {
 	log.Printf("Gobbing data took %s", time.Since(encodeStart))
 }
 
+func randomPath() {
+	bacon, err := LoadBaconGob("data/bacon.gob")
+	if err != nil {
+		log.Fatalf("FAIL: %v\n", err)
+	}
+
+	for i := 0; i < 10; i++ {
+		startNode := bacon.RandomPerson()
+		endNode := bacon.RandomPerson()
+		path, err := bacon.BreadthFirstSearch(startNode, endNode)
+
+		if err != nil {
+			fmt.Printf("No path found\n")
+		} else {
+			fmt.Println(path.Prose())
+		}
+	}
+}
 
 func findPath(start string, end string) {
 	loadStart := time.Now()
@@ -84,15 +113,7 @@ func findPath(start string, end string) {
 	if err != nil {
 		fmt.Printf("No path found\n")
 	} else {
-		for _, node := range path {
-			ni := bacon.NodeInfo[node]
-			if ni.Kind == "movie" {
-				fmt.Printf("🎥 %s\n", ni.Name)
-			} else {
-				fmt.Printf("👤 %s\n", ni.Name)
-			}
-
-		}
+		fmt.Println(path.Prose())
 	}
 }
 
@@ -123,6 +144,8 @@ type Bacon struct {
 	People   People     `json:"people"`
 }
 
+type Path []NodeInfo
+
 // LoadBaconJSON is like NewBacon with a JSON path
 func LoadBaconJSON(path string) (*Bacon, error) {
 	bacon := new(Bacon)
@@ -150,6 +173,9 @@ func LoadBaconGob(path string) (*Bacon, error) {
 
 	decoder := gob.NewDecoder(gobFile)
 	err = decoder.Decode(bacon)
+	if err != nil {
+		return nil, err
+	}
 
 	gobFile.Close()
 	return bacon, nil
@@ -222,7 +248,7 @@ func (set NodeSet) Contains(node Node) bool {
 
 // BreadthFirstSearch returns bacon number of source to dest
 // Returns a slice of nodes representing the path from source to dest
-func (b *Bacon) BreadthFirstSearch(source Node, dest Node) ([]Node, error) {
+func (b *Bacon) BreadthFirstSearch(source Node, dest Node) (Path, error) {
 
 	g := b.Graph
 
@@ -244,7 +270,7 @@ func (b *Bacon) BreadthFirstSearch(source Node, dest Node) ([]Node, error) {
 					parentNode[neighbor] = node
 				}
 				if neighbor == dest {
-					return buildPath(source, dest, parentNode), nil
+					return NewPath(source, dest, parentNode, b), nil
 				}
 			}
 		}
@@ -259,14 +285,42 @@ func (b *Bacon) BreadthFirstSearch(source Node, dest Node) ([]Node, error) {
 	return nil, errors.New("No path found")
 }
 
-func buildPath(source Node, dest Node, parents []Node) []Node {
-	path := make([]Node, 0, 10)
-	path = append(path, dest)
+// RandomPerson returns a random person from the node list.
+func (b *Bacon) RandomPerson() Node {
+	// Faster than trying to pull a random person from the People map
+	// Randomly probe the NodeInfo list until a person is found.
+	for {
+		i := rand.Intn(len(b.NodeInfo))
+		if b.NodeInfo[i].Kind == "person" {
+			return Node(i)
+		}
+	}
+}
+
+func NewPath(source Node, dest Node, parents []Node, b *Bacon) Path {
+	path := make(Path, 0, 10)
+	path = append(path, b.NodeInfo[dest])
 	nextNode := parents[dest]
 	for nextNode != source {
-		path = append(path, nextNode)
+		path = append(path, b.NodeInfo[nextNode])
 		nextNode = parents[nextNode]
 	}
-	path = append(path, source)
+	path = append(path, b.NodeInfo[source])
 	return path
+}
+
+// Degrees returns the Bacon Number of a given Path
+func (p Path) Degrees() int {
+	return (len(p) - 1) / 2
+}
+
+// Prose converts a path into readable text
+func (p Path) Prose() string {
+	var sb strings.Builder
+	fmt.Fprintf(&sb, "%s and %s are separated by %d degrees. ", p[0].Name, p[len(p)-1].Name, p.Degrees())
+	fmt.Fprintf(&sb, "%s was in %s with %s", p[0].Name, p[1].Name, p[2].Name)
+	for i := 3; i < len(p); i += 2 {
+		fmt.Fprintf(&sb, ", who was in %s with %s", p[i].Name, p[i+1].Name)
+	}
+	return sb.String()
 }
