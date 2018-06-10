@@ -1,4 +1,4 @@
-package main
+package bacon
 
 import (
 	"encoding/gob"
@@ -6,116 +6,14 @@ import (
 	"errors"
 	"fmt"
 	"io/ioutil"
-	"log"
 	"math"
 	"math/rand"
 	"os"
 	"strings"
-	"time"
 
 	"github.com/arbovm/levenshtein"
 	"github.com/shawnsmithdev/zermelo/zuint32"
-	"github.com/urfave/cli"
 )
-
-func main() {
-
-	rand.Seed(time.Now().UnixNano())
-	app := cli.NewApp()
-	app.Commands = []cli.Command{
-		{
-			Name:  "path",
-			Usage: "Find a path between 2 people",
-			Action: func(c *cli.Context) error {
-				findPath(c.Args().Get(0), c.Args().Get(1))
-				return nil
-			},
-		},
-		{
-			Name:  "serialize",
-			Usage: "convert the json db to higher perf",
-			Action: func(c *cli.Context) error {
-				reSerialize()
-				return nil
-			},
-		},
-		{
-			Name:  "random",
-			Usage: "Find a random path",
-			Action: func(c *cli.Context) error {
-				randomPath()
-				return nil
-			},
-		},
-	}
-	err := app.Run(os.Args)
-	if err != nil {
-		log.Fatal(err)
-	}
-}
-
-// Load the data in JSON and dump it back out in something sexier
-func reSerialize() {
-	loadStart := time.Now()
-	bacon, err := LoadBaconJSON("data/bacon.json")
-	log.Printf("Loading data took %s", time.Since(loadStart))
-	if err != nil {
-		log.Fatalf("FAIL: %v\n", err)
-	}
-
-	encodeStart := time.Now()
-	file, err := os.Create("data/bacon.gob")
-
-	if err == nil {
-		encoder := gob.NewEncoder(file)
-		encoder.Encode(bacon)
-	}
-
-	file.Close()
-	log.Printf("Gobbing data took %s", time.Since(encodeStart))
-}
-
-func randomPath() {
-	bacon, err := LoadBaconGob("data/bacon.gob")
-	if err != nil {
-		log.Fatalf("FAIL: %v\n", err)
-	}
-
-	for i := 0; i < 10; i++ {
-		startNode := bacon.RandomPerson()
-		endNode := bacon.RandomPerson()
-		path, err := bacon.BreadthFirstSearch(startNode, endNode)
-
-		if err != nil {
-			fmt.Printf("No path found\n")
-		} else {
-			fmt.Println(path.Prose())
-		}
-	}
-}
-
-func findPath(start string, end string) {
-	loadStart := time.Now()
-	bacon, err := LoadBaconGob("data/bacon.gob")
-	log.Printf("Loading data took %s", time.Since(loadStart))
-	if err != nil {
-		log.Fatalf("FAIL: %v\n", err)
-	}
-	startNode := bacon.find(start)
-	endNode := bacon.find(end)
-
-	fmt.Printf("Start Node: %v\n", bacon.NodeInfo[startNode])
-	fmt.Printf("End Node: %v\n", bacon.NodeInfo[endNode])
-
-	searchStart := time.Now()
-	path, err := bacon.BreadthFirstSearch(startNode, endNode)
-	log.Printf("Search took %s", time.Since(searchStart))
-	if err != nil {
-		fmt.Printf("No path found\n")
-	} else {
-		fmt.Println(path.Prose())
-	}
-}
 
 // Node represents a graph node
 type Node = uint32
@@ -146,8 +44,8 @@ type Bacon struct {
 
 type Path []NodeInfo
 
-// LoadBaconJSON is like NewBacon with a JSON path
-func LoadBaconJSON(path string) (*Bacon, error) {
+// NewFromJSON is like NewBacon with a JSON path
+func NewFromJSON(path string) (*Bacon, error) {
 	bacon := new(Bacon)
 	jsonFile, err := os.Open(path)
 	if err != nil {
@@ -163,8 +61,8 @@ func LoadBaconJSON(path string) (*Bacon, error) {
 	return bacon, nil
 }
 
-// LoadBaconGob is like NewBacon with a JSON path
-func LoadBaconGob(path string) (*Bacon, error) {
+// NewFromGob is like NewBacon with a Gob path
+func NewFromGob(path string) (*Bacon, error) {
 	bacon := new(Bacon)
 	gobFile, err := os.Open(path)
 	if err != nil {
@@ -181,7 +79,9 @@ func LoadBaconGob(path string) (*Bacon, error) {
 	return bacon, nil
 }
 
-func (b *Bacon) find(name string) Node {
+// FindPerson finds a Person-typed node by name
+// Does approximate matching where possible
+func (b *Bacon) FindPerson(name string) Node {
 	node, ok := b.People[name]
 	if ok {
 		return node
@@ -246,9 +146,8 @@ func (set NodeSet) Contains(node Node) bool {
 	return set[bucket]&bit != 0
 }
 
-// BreadthFirstSearch returns bacon number of source to dest
-// Returns a slice of nodes representing the path from source to dest
-func (b *Bacon) BreadthFirstSearch(source Node, dest Node) (Path, error) {
+// FindPath returns bacon Path of source to dest
+func (b *Bacon) FindPath(source Node, dest Node) (Path, error) {
 
 	g := b.Graph
 
@@ -297,6 +196,7 @@ func (b *Bacon) RandomPerson() Node {
 	}
 }
 
+// NewPath constructs a Path of NodeInfos
 func NewPath(source Node, dest Node, parents []Node, b *Bacon) Path {
 	path := make(Path, 0, 10)
 	path = append(path, b.NodeInfo[dest])
@@ -318,9 +218,9 @@ func (p Path) Degrees() int {
 func (p Path) Prose() string {
 	var sb strings.Builder
 	fmt.Fprintf(&sb, "%s and %s are separated by %d degrees. ", p[0].Name, p[len(p)-1].Name, p.Degrees())
-	fmt.Fprintf(&sb, "%s was in %s with %s", p[0].Name, p[1].Name, p[2].Name)
+	fmt.Fprintf(&sb, "%s was in \"%s\" with %s", p[0].Name, p[1].Name, p[2].Name)
 	for i := 3; i < len(p); i += 2 {
-		fmt.Fprintf(&sb, ", who was in %s with %s", p[i].Name, p[i+1].Name)
+		fmt.Fprintf(&sb, ", who was in \"%s\" with %s", p[i].Name, p[i+1].Name)
 	}
 	return sb.String()
 }
