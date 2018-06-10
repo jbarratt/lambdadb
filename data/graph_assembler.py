@@ -40,7 +40,11 @@ def main():
         node_id = id_gen.get_id()
         node_data[node_id] = {'type': 'movie', 'tmdb_id': movie_id, 'name': movie_names[movie_id]}
 
-        movie_data = json.load(open(f"movie_json/{movie_id}.json"))
+        try:
+            movie_data = json.load(open(f"movie_json/{movie_id}.json"))
+        except:
+            print(f"Unable to load {movie_id}, skipping\n")
+            continue
 
         for member in movie_data['cast']:
             person_id = member['id']
@@ -64,7 +68,7 @@ def main():
 
     # Dump the adjacency list
     g_list = []
-    g_span = [None]*id_gen.next_id
+    g_span = [None]*(id_gen.next_id+1)
     offset = 0
     for node_id in range(id_gen.next_id):
         g_span[node_id] = offset
@@ -74,6 +78,9 @@ def main():
         node_neighbors[node_id].sort()
         g_list.extend(node_neighbors[node_id])
         offset += len(node_neighbors[node_id])
+
+    # Add on the final offset for the final node
+    g_span[id_gen.next_id]  = offset
 
     out_data['graph'] = {'list': g_list, 'span': g_span}
 
