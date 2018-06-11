@@ -202,6 +202,81 @@ https://www.progville.com/go/bolt-embedded-db-golang/
 It might not make a difference, but it's interesting to think about using packr for the binary:
 [packr](https://github.com/gobuffalo/packr)
 
-# Properly Shaping the distributable
+# Alexa Skill Notes
 
-https://github.com/sbogacz/wouldyoutatter/tree/master/cmd/wouldyoutatter
+[Official Docs](https://developer.amazon.com/docs/custom-skills/host-a-custom-skill-as-an-aws-lambda-function.html)
+[Terraform Example](https://github.com/terraform-providers/terraform-provider-aws/tree/master/examples/alexa)
+
+* [Create a Skill](https://developer.amazon.com/docs/devconsole/create-a-skill-and-choose-the-interaction-model.html)
+* copy the skill ID
+
+* [Alexa Console](https://developer.amazon.com/alexa)
+
+There's some built-in intents that seem to be handy for actors!
+
+  AMAZON.SearchAction<object@VideoCreativeWork[actor]>
+
+Looks like that's designed to take in other information and help you find an actor, not to get an actor to your skill.
+
+  {
+    "request": {
+        "type": "IntentRequest",
+        "locale": "en-US",
+        "intent": {
+            "name": "AMAZON.SearchAction<object@Actor>",
+            "slots": {
+                "object.type": {
+                    "name": "object.type",
+                    "value": "actor"
+                }
+            }
+        }
+    }
+  }
+
+
+  Slot values:
+  {
+    "name": "object.type",
+    "value": "actors"
+  }
+
+  Open Bacon Guru
+  > Welcome to Bacon Guru. If you give me 2 actor's names, I'll tell you how they are connected.
+  > Who is the first actor?
+  > Who is the second actor?
+  > A and B are connected ...
+
+  AMAZON.Actor
+
+
+  > Ask Bacon Guru to connect {AMAZON.Actor} to {AMAZON.Actor}
+
+  Ok, so created a custom intent called `GetBaconPath`
+  It has a `fromActor` and `toActor` slots, of type `AMAZON.Actor`
+
+
+  Skill ID: `amzn1.ask.skill.584cf3cb-3b35-462c-b665-057a40b3d955`
+
+  "In the Designer section, under Add triggers, click Alexa Skills Kit to select the trigger."
+  Under Configure triggers, select Enable for Skill ID verification.
+Enter your skill ID in the Skill ID edit box.
+Click Add.
+Click Save to save the change.
+
+aws lambda add-permission
+    --function-name hello_world
+    --statement-id 1
+    --action lambda:InvokeFunction
+    --principal alexa-appkit.amazon.com
+    --event-source-token amzn1.ask.skill.xxxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
+
+It doesn't look like the source token [is supported by terraform yet](https://github.com/terraform-providers/terraform-provider-aws/issues/2248).
+
+  $ terraform init
+  $ terraform plan -out theplan
+  $ terraform apply theplan
+
+Kaboom! Got an ARN back, too.
+
+  arn:aws:lambda:us-west-2:136629216070:function:bacon-guru-skill

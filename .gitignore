@@ -4,3 +4,7 @@ data/*.json
 data/*.gob
 graphtoy
 main
+terraform/main.zip
+terraform/.terraform
+terraform/terraform.tfstate
+terraform/theplan
