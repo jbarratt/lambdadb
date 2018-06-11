@@ -11,6 +11,7 @@ import (
 
 	"github.com/jbarratt/lambdadb/bacon"
 	"github.com/urfave/cli"
+	pb "gopkg.in/cheggaaa/pb.v1"
 )
 
 func main() {
@@ -89,7 +90,10 @@ func monteCarlo() {
 	}
 	counts := make([]uint, b.Graph.Order(), b.Graph.Order())
 
-	for i := 0; i < 1000000; i++ {
+	iterations := 4000000
+	bar := pb.StartNew(iterations)
+	for i := 0; i < iterations; i++ {
+		bar.Increment()
 		startNode := b.RandomPerson()
 		endNode := b.RandomPerson()
 		path, err := b.FindPath(startNode, endNode)
@@ -100,6 +104,7 @@ func monteCarlo() {
 			counts[path[i].Node] += 1
 		}
 	}
+	bar.FinishPrint("Simulation Complete")
 	// sort this data
 	type score struct {
 		name  string
