@@ -63,7 +63,8 @@ def main():
     out_data = {}
 
     out_data['node_data'] = [node_data[x] for x in range(id_gen.next_id)]
-    out_data['people'] = {node_data[x]['name']: x for x in range(id_gen.next_id) if node_data[x]['type'] == 'person'}
+    # String lookup of names. Lower case for less fragile lookups
+    out_data['people'] = {node_data[x]['name'].lower(): x for x in range(id_gen.next_id) if node_data[x]['type'] == 'person'}
 
 
     # Dump the adjacency list

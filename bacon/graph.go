@@ -10,6 +10,7 @@ import (
 	"math/rand"
 	"os"
 	"strings"
+	"time"
 
 	"github.com/arbovm/levenshtein"
 	"github.com/shawnsmithdev/zermelo/zuint32"
@@ -82,20 +83,23 @@ func NewFromGob(path string) (*Bacon, error) {
 // FindPerson finds a Person-typed node by name
 // Does approximate matching where possible
 func (b *Bacon) FindPerson(name string) Node {
-	node, ok := b.People[name]
+	key := strings.ToLower(name)
+	node, ok := b.People[key]
 	if ok {
 		return node
 	}
 	fmt.Println("Name not found, using most similar")
+	searchStart := time.Now()
 	minDist := math.MaxInt32
 	minNode := Node(0)
 	for person, node := range b.People {
-		dist := levenshtein.Distance(person, name)
+		dist := levenshtein.Distance(person, key)
 		if dist < minDist {
 			minDist = dist
 			minNode = node
 		}
 	}
+	fmt.Printf("Fuzzy Finding took %s\n", time.Since(searchStart))
 	return minNode
 }
 

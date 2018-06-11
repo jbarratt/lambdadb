@@ -332,3 +332,12 @@ Kaboom! Got an ARN back, too.
       REPORT RequestId: 423ea8b7-6d3f-11e8-8fde-a7ebec1c8495	Duration: 1595.97 ms	Billed Duration: 1600 ms Memory Size: 512 MB	Max Memory Used: 140 MB
 
       REPORT RequestId: b9ef39e5-6d3f-11e8-afe1-e3f3921c1aad	Duration: 980.44 ms	Billed Duration: 1000 ms Memory Size: 512 MB	Max Memory Used: 141 MB
+
+  # Fixing Spell Check
+
+  [1000x faster spelling correction](https://medium.com/@wolfgarbe/1000x-faster-spelling-correction-algorithm-2012-8701fcd87a5f)
+
+  > Naive approach
+  > The obvious way of doing this is to compute the edit distance from the query term to each dictionary > term, before selecting the string(s) of minimum edit distance as spelling suggestion. This exhaustive search is inordinately expensive.
+
+  Heh whoops that is literally the approach I started with.

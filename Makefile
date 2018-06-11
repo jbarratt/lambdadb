@@ -6,3 +6,6 @@ main.zip: cmd/baconlambda/main.go
 	zip main.zip main bacon.gob
 	rm bacon.gob
 	mv main.zip terraform/
+
+deploy: main.zip
+	cd terraform; terraform plan -out theplan; terraform apply theplan
