@@ -33,6 +33,9 @@ func Handler(request alexa.Request) (alexa.Response, error) {
 
 // Handler is the lambda handler
 func handleBacon(r alexa.Request) alexa.Response {
+	if len(r.Body.Intent.Slots["fromActor"].Value) < 3 {
+		return alexa.NewSimpleResponse("Missing From", "Hm, I only heard one actor name. Try something like 'ask Bacon Guru to link James Dean to John Malkovitch'")
+	}
 	loadStart := time.Now()
 
 	fmt.Printf("fromActor: %s\n", r.Body.Intent.Slots["fromActor"].Value)
@@ -59,7 +62,7 @@ func handleBacon(r alexa.Request) alexa.Response {
 }
 
 func handleHelp() alexa.Response {
-	return alexa.NewSimpleResponse("Help for Bacon Guru", "You can say things like Bacon Guru, connect Tom Cruise to Tom Hardy")
+	return alexa.NewSimpleResponse("Help for Bacon Guru", "You can say things like ask Bacon Guru to link Tom Cruise to Tom Hardy")
 }
 
 func main() {
