@@ -9,3 +9,4 @@ terraform/.terraform
 terraform/terraform.tfstate
 terraform/theplan
 terraform/terraform.tfstate.backup
+*.csv
