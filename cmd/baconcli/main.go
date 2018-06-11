@@ -6,6 +6,7 @@ import (
 	"log"
 	"math/rand"
 	"os"
+	"sort"
 	"time"
 
 	"github.com/jbarratt/lambdadb/bacon"
@@ -41,6 +42,14 @@ func main() {
 				return nil
 			},
 		},
+		{
+			Name:  "monte",
+			Usage: "Find common linkers",
+			Action: func(c *cli.Context) error {
+				monteCarlo()
+				return nil
+			},
+		},
 	}
 	err := app.Run(os.Args)
 	if err != nil {
@@ -67,6 +76,64 @@ func reSerialize() {
 
 	file.Close()
 	log.Printf("Gobbing data took %s", time.Since(encodeStart))
+
+	fmt.Printf("Number of nodes: %d\n", bacon.Graph.Order())
+	fmt.Printf("%d films and %d people\n", bacon.Graph.Order()-len(bacon.People), len(bacon.People))
+
+}
+
+func monteCarlo() {
+	b, err := bacon.NewFromGob("data/bacon.gob")
+	if err != nil {
+		log.Fatalf("FAIL: %v\n", err)
+	}
+	counts := make([]uint, b.Graph.Order(), b.Graph.Order())
+
+	for i := 0; i < 1000000; i++ {
+		startNode := b.RandomPerson()
+		endNode := b.RandomPerson()
+		path, err := b.FindPath(startNode, endNode)
+		if err != nil {
+			continue
+		}
+		for i := 0; i < len(path); i++ {
+			counts[path[i].Node] += 1
+		}
+	}
+	// sort this data
+	type score struct {
+		name  string
+		count uint
+	}
+	people := make([]score, 100000)
+	for id, count := range counts {
+		if count > 0 && b.NodeInfo[id].IsPerson {
+			people = append(people, score{name: b.NodeInfo[id].Name, count: count})
+		}
+	}
+	sort.Slice(people, func(i, j int) bool {
+		return people[i].count > people[j].count
+	})
+	f, _ := os.Create("people.csv")
+	for _, person := range people {
+		fmt.Fprintf(f, "%s,%d\n", person.name, person.count)
+	}
+	f.Close()
+
+	movies := make([]score, 100000)
+	for id, count := range counts {
+		if count > 0 && !b.NodeInfo[id].IsPerson {
+			movies = append(movies, score{name: b.NodeInfo[id].Name, count: count})
+		}
+	}
+	sort.Slice(movies, func(i, j int) bool {
+		return movies[i].count > movies[j].count
+	})
+	f, _ = os.Create("movies.csv")
+	for _, movie := range movies {
+		fmt.Fprintf(f, "%s,%d\n", movie.name, movie.count)
+	}
+	f.Close()
 }
 
 func randomPath() {

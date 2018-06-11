@@ -38,7 +38,7 @@ def main():
     fetched_movies = json.load(open('movies_by_popularity.json', 'r'))
     for movie_id, _ in fetched_movies:
         node_id = id_gen.get_id()
-        node_data[node_id] = {'type': 'movie', 'tmdb_id': movie_id, 'name': movie_names[movie_id]}
+        node_data[node_id] = {'isPerson': False, 'tmdb_id': movie_id, 'name': movie_names[movie_id], 'node_id': node_id}
 
         try:
             movie_data = json.load(open(f"movie_json/{movie_id}.json"))
@@ -52,7 +52,7 @@ def main():
             if person_id not in person_to_node:
                 if person_id in people_names:
                     p_node_id = id_gen.get_id()
-                    node_data[p_node_id] = {'type': 'person', 'tmdb_id': person_id, 'name': people_names[person_id]}
+                    node_data[p_node_id] = {'isPerson': True, 'tmdb_id': person_id, 'name': people_names[person_id], 'node_id': p_node_id}
                     person_to_node[person_id] = p_node_id
             else:
                 p_node_id = person_to_node[person_id]
@@ -64,7 +64,7 @@ def main():
 
     out_data['node_data'] = [node_data[x] for x in range(id_gen.next_id)]
     # String lookup of names. Lower case for less fragile lookups
-    out_data['people'] = {node_data[x]['name'].lower(): x for x in range(id_gen.next_id) if node_data[x]['type'] == 'person'}
+    out_data['people'] = {node_data[x]['name'].lower(): x for x in range(id_gen.next_id) if node_data[x]['isPerson']}
 
 
     # Dump the adjacency list

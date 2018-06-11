@@ -341,3 +341,13 @@ Kaboom! Got an ARN back, too.
   > The obvious way of doing this is to compute the edit distance from the query term to each dictionary > term, before selecting the string(s) of minimum edit distance as spelling suggestion. This exhaustive search is inordinately expensive.
 
   Heh whoops that is literally the approach I started with.
+
+  # Blog Post
+
+  Person who is thinking like me but [not with the serverless part](https://hackernoon.com/what-i-learnt-from-building-3-high-traffic-web-applications-on-an-embedded-key-value-store-68d47249774f)
+
+  [Bleve](https://github.com/blevesearch/bleve) (text indexing)
+
+  [Badger](https://github.com/dgraph-io/badger) embeddable k/v
+
+  [QL](https://github.com/cznic/ql) embedded SQL databases

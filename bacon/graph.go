@@ -28,9 +28,10 @@ type Graph struct {
 
 // NodeInfo contains extra info about a node
 type NodeInfo struct {
-	Name   string
-	Kind   string `json:"type"`
-	TmdbID uint32 `json:"tmdb_id"`
+	Name     string
+	IsPerson bool   `json:"isPerson"`
+	TmdbID   uint32 `json:"tmdb_id"`
+	Node     Node   `json:"node_id"`
 }
 
 // People enables lookup of people by name to ID
@@ -194,7 +195,7 @@ func (b *Bacon) RandomPerson() Node {
 	// Randomly probe the NodeInfo list until a person is found.
 	for {
 		i := rand.Intn(len(b.NodeInfo))
-		if b.NodeInfo[i].Kind == "person" {
+		if b.NodeInfo[i].IsPerson {
 			return Node(i)
 		}
 	}
