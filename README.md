@@ -280,3 +280,55 @@ It doesn't look like the source token [is supported by terraform yet](https://gi
 Kaboom! Got an ARN back, too.
 
   arn:aws:lambda:us-west-2:136629216070:function:bacon-guru-skill
+
+
+  "request": {
+  		"type": "IntentRequest",
+  		"requestId": "amzn1.echo-api.request.fdf322aa-e7c6-4235-b700-8301fd830769",
+  		"timestamp": "2018-06-11T05:42:49Z",
+  		"locale": "en-US",
+  		"intent": {
+  			"name": "GetBaconPath",
+  			"confirmationStatus": "NONE",
+  			"slots": {
+  				"toActor": {
+  					"name": "toActor",
+  					"confirmationStatus": "NONE"
+  				},
+  				"fromActor": {
+  					"name": "fromActor",
+  					"value": "martin sheen and martin short",
+  					"confirmationStatus": "NONE"
+  				}
+  			}
+  		}
+  	}
+
+
+      "request": {
+  		"type": "IntentRequest",
+  		"requestId": "amzn1.echo-api.request.15016201-a373-4085-acc5-4fd0ea64aee7",
+  		"timestamp": "2018-06-11T05:46:55Z",
+  		"locale": "en-US",
+  		"intent": {
+  			"name": "GetBaconPath",
+  			"confirmationStatus": "NONE",
+  			"slots": {
+  				"toActor": {
+  					"name": "toActor",
+  					"value": "martin short",
+  					"confirmationStatus": "NONE"
+  				},
+  				"fromActor": {
+  					"name": "fromActor",
+  					"value": "Alex winters",
+  					"confirmationStatus": "NONE"
+  				}
+  			}
+  		}
+  	}
+
+
+      REPORT RequestId: 423ea8b7-6d3f-11e8-8fde-a7ebec1c8495	Duration: 1595.97 ms	Billed Duration: 1600 ms Memory Size: 512 MB	Max Memory Used: 140 MB
+
+      REPORT RequestId: b9ef39e5-6d3f-11e8-afe1-e3f3921c1aad	Duration: 980.44 ms	Billed Duration: 1000 ms Memory Size: 512 MB	Max Memory Used: 141 MB

@@ -18,6 +18,8 @@ resource "aws_lambda_function" "default" {
   role             = "${aws_iam_role.default.arn}"
   handler          = "main"
   runtime          = "go1.x"
+  timeout          = "300"
+  memory_size      = "512"
 }
 
 resource "aws_iam_role" "default" {
