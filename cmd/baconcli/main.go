@@ -11,12 +11,13 @@ import (
 
 	"github.com/jbarratt/lambdadb/bacon"
 	"github.com/urfave/cli"
-	pb "gopkg.in/cheggaaa/pb.v1"
+	pb "gopkg.in/cheggaaa/pb.v2"
 )
 
 func main() {
 
 	rand.Seed(time.Now().UnixNano())
+	// defer profile.Start(profile.MemProfile).Stop()
 	app := cli.NewApp()
 	app.Commands = []cli.Command{
 		{
@@ -90,7 +91,8 @@ func monteCarlo() {
 	}
 	counts := make([]uint, b.Graph.Order(), b.Graph.Order())
 
-	iterations := 4000000
+	iterations := 400000
+	// iterations := 100000
 	bar := pb.StartNew(iterations)
 	for i := 0; i < iterations; i++ {
 		bar.Increment()
@@ -104,7 +106,7 @@ func monteCarlo() {
 			counts[path[i].Node] += 1
 		}
 	}
-	bar.FinishPrint("Simulation Complete")
+	bar.Finish()
 	// sort this data
 	type score struct {
 		name  string

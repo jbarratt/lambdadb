@@ -9,3 +9,6 @@ main.zip: cmd/baconlambda/main.go
 
 deploy: main.zip
 	cd terraform; terraform plan -out theplan; terraform apply theplan
+
+baconcli: cmd/baconcli/main.go bacon/graph.go
+	go build -o baconcli cmd/baconcli/main.go

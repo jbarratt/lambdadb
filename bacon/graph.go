@@ -174,7 +174,7 @@ func (b *Bacon) FindPath(source Node, dest Node) (Path, error) {
 					parentNode[neighbor] = node
 				}
 				if neighbor == dest {
-					return NewPath(source, dest, parentNode, b), nil
+					return NewPath(source, dest, parentNode, b)
 				}
 			}
 		}
@@ -202,16 +202,20 @@ func (b *Bacon) RandomPerson() Node {
 }
 
 // NewPath constructs a Path of NodeInfos
-func NewPath(source Node, dest Node, parents []Node, b *Bacon) Path {
+func NewPath(source Node, dest Node, parents []Node, b *Bacon) (Path, error) {
+	maxPath := 60
 	path := make(Path, 0, 10)
 	path = append(path, b.NodeInfo[dest])
 	nextNode := parents[dest]
-	for nextNode != source {
+	for nextNode != source && len(path) < maxPath {
 		path = append(path, b.NodeInfo[nextNode])
 		nextNode = parents[nextNode]
 	}
+	if len(path) >= maxPath {
+		return path, errors.New("Path impossibly long")
+	}
 	path = append(path, b.NodeInfo[source])
-	return path
+	return path, nil
 }
 
 // Degrees returns the Bacon Number of a given Path
